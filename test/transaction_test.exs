@@ -24,6 +24,7 @@ defmodule Tds.TransactionTest do
   end
 
   @tag mode: :transaction
+  @tag :transaction
   test "connection works after failure during commit transaction", context do
     assert transaction(fn(conn) ->
       assert {:error, %Tds.Error{mssql: %{class: 14, number: 2627}}} =
@@ -31,11 +32,12 @@ defmodule Tds.TransactionTest do
       assert {:ok, %Tds.Result{columns: [""], num_rows: 1, rows: ['*']}} =
         Tds.query(conn, "SELECT 42", [])
       :hi
-    end) == {:ok, :hi}
+    end) == {:error, :rollback}
     assert [[42]] = query("SELECT 42", [])
   end
 
   @tag mode: :transaction
+  @tag :transaction
   test "connection works after failure during rollback transaction", context do
     assert transaction(fn(conn) ->
       assert {:error, %Tds.Error{mssql: %{class: 14, number: 2627}}} =
@@ -48,6 +50,8 @@ defmodule Tds.TransactionTest do
   end
 
   @tag mode: :transaction
+  @tag :transaction
+  @tag :transaction_status
   test "transaction shows correct transaction status", context do
     pid = context[:pid]
     opts = [mode: :transaction]
